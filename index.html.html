@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>실트 문구 생성기</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f6fa;color:#202124;font-family:system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif}main{max-width:760px;margin:28px auto;padding:0 16px 44px}.muted,.hint{color:#687080}.muted,.hint,footer{font-size:13px;line-height:1.55}h1{margin:8px 0;font-size:28px}.card{background:#fff;border:1px solid #e4e7ec;border-radius:16px;padding:18px;margin:14px 0}label{display:block;font-weight:700;font-size:14px;margin:12px 0 6px}input,select{width:100%;padding:12px;border:1px solid #dfe3e8;border-radius:10px;font:inherit;background:#fff}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}button{border:0;border-radius:10px;padding:11px 14px;font-weight:700;cursor:pointer}.primary{background:#222831;color:#fff}.secondary{background:#eef1f5;color:#202124}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.result{border:1px solid #e4e7ec;border-radius:11px;padding:12px;margin:10px 0;white-space:pre-wrap;line-height:1.65;overflow-wrap:anywhere}.resulttop{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#687080;margin-bottom:6px}.segment{border:1px solid #e4e7ec;border-radius:12px;padding:12px;margin-top:14px}.notice{background:#f1f5f9;padding:11px;border-radius:9px;font-size:13px;line-height:1.55;color:#475569}.counter{font-size:12px;color:#687080;margin-top:5px}footer{text-align:center;margin-top:20px}.checkline{display:flex;align-items:center;gap:9px}.checkline input{width:auto}.hidden{display:none}@media(max-width:560px){.row{grid-template-columns:1fr}h1{font-size:25px}}
+</style>
+</head>
+<body><main>
+<div class="muted">FAN PROJECT TOOL</div><h1>실트 문구 생성기</h1>
+<p class="muted">키워드와 해시태그를 입력하면 응원 문구를 자동으로 무작위 생성합니다.</p>
+<section class="card">
+<div class="row"><div><label for="language">문구 언어</label><select id="language"><option value="mix">한국어 + 영어 섞어서</option><option value="ko">한국어</option><option value="en">English</option></select></div><div><label for="count">생성 개수</label><select id="count"><option>5</option><option selected>10</option><option>20</option><option>30</option><option>50</option></select></div></div>
+<label for="topic">키워드 / 응원 대상</label><input id="topic" placeholder="예: 씬롱, 컴백, 새 앨범, 무대">
+<label for="tag1">첫 번째 해시태그</label><input id="tag1" placeholder="#아티스트_응원">
+<label for="tag2">두 번째 해시태그 (선택)</label><input id="tag2" placeholder="#SupportTheArtist">
+<div class="notice" style="margin-top:12px">문구 후보를 직접 작성할 필요가 없습니다. 키워드를 바탕으로 내장된 문구 패턴을 조합해 자동 생성합니다. 키워드를 비워두면 일반 응원 문구가 생성됩니다.</div>
+<div class="segment"><label class="checkline"><input type="checkbox" id="strike" checked> 총공 전용 모드 사용</label>
+<p class="hint">해시태그 앞·사이·뒤에 들어갈 문구의 글자 수를 각각 지정합니다. 공백도 1글자로 계산하며, 문구는 자동으로 생성됩니다.</p>
+<div class="row"><div><label for="bc">첫 해시태그 앞 글자 수</label><input id="bc" type="number" min="0" max="80" value="10"></div><div><label for="mc">해시태그 사이 글자 수</label><input id="mc" type="number" min="0" max="80" value="10"></div><div><label for="ac">마지막 해시태그 뒤 글자 수</label><input id="ac" type="number" min="0" max="80" value="10"></div></div>
+<div class="counter" id="availability">키워드와 글자 수를 설정하면 생성 가능한 문구를 확인할 수 있습니다.</div>
+</div>
+<button class="primary" id="gen" style="width:100%;margin-top:15px">문구 랜덤 생성</button>
+</section>
+<section class="card"><div style="display:flex;justify-content:space-between;gap:8px"><b>생성 결과</b><span class="muted" id="total">아직 생성 전</span></div><div id="results"><p class="hint">키워드와 해시태그를 입력한 뒤 생성 버튼을 눌러주세요.</p></div><div class="actions"><button class="secondary" id="copyall">전체 복사</button><button class="secondary" id="share">전체 X 공유</button><button class="secondary" id="again">다시 생성</button></div></section>
+<footer>문구는 내장된 문장 패턴을 조합해 생성합니다. X의 실시간 트렌드 반영이나 검색 순위 진입을 보장하지 않습니다.</footer>
+</main>
+<script>
+const $=id=>document.getElementById(id), chars=s=>Array.from(s).length, pick=a=>a[Math.floor(Math.random()*a.length)], unique=a=>[...new Set(a)], shuffle=a=>{let b=[...a];for(let i=b.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b};
+let current=[];
+function tag(id){let s=$(id).value.trim();return s?(s.startsWith('#')?s:'#'+s):''}
+function topic(){return $('topic').value.trim()}
+const standard={
+ko:[
+'{t}를 향한 응원은 계속돼','오늘도 {t}를 응원해','언제나 {t}의 편이야','{t}의 다음 무대를 기다릴게','{t}의 빛나는 순간을 함께해','더 많은 사람이 {t}를 알아보길','{t}에게 좋은 소식만 가득하길','{t}의 노력이 꼭 빛을 발하길','{t}와 함께하는 오늘도 소중해','{t}를 향한 마음은 변함없어','{t}의 새로운 시작을 응원해','{t}가 보여줄 내일이 기대돼','오늘의 관심이 {t}에게 닿기를','{t}의 모든 순간을 응원할게','우리 함께 {t}의 목소리를 전하자','{t}가 더 크게 빛날 수 있도록','{t}에게 따뜻한 응원을 보내자','언제나 {t}를 믿고 응원해','{t}의 행복한 활동을 바라','{t}를 위한 좋은 말이 더 많아지길','{t}의 무대가 오래 기억되길','{t}에게 힘이 되는 응원을 모으자','{t}의 매력을 더 널리 알리자','오늘도 {t}와 같은 마음으로','{t}를 응원하는 마음을 모아','{t}의 모든 도전을 지지해','{t}가 원하는 길을 응원해','더 환하게 빛날 {t}를 기대해','{t}에게 우리의 마음을 전하자','계속해서 {t}의 곁을 지킬게'
+],
+en:[
+'Always cheering for {t}','Keep shining, {t}','We are here for {t}','The best is yet to come, {t}','Sending love and support to {t}','Let the world see {t}','We believe in {t}','Every moment with {t} matters','More love and support for {t}','Keep moving forward, {t}','May {t} shine brighter every day','Our support is always with {t}','Let us celebrate {t} together','Wishing {t} endless happiness','We will keep supporting {t}','The world deserves to see {t}','One more cheer for {t}','Together, we stand with {t}','Keep reaching for the stars, {t}','All our support goes to {t}'
+]};
+const sectionTemplates={
+ko:{
+b:['{t}를 응원해요','오늘도 {t} 응원해','언제나 {t} 편이야','{t}의 오늘을 응원해','늘 {t}와 함께할게','{t}를 믿고 있어','우리의 {t}를 응원해','{t}에게 힘을 보낼게','계속 {t}를 응원해','{t}의 빛을 믿어요','오늘도 너를 응원해요','늘 네 곁에 있을게','언제나 네 편이야','너의 오늘을 응원해','끝까지 함께할게요','변함없이 응원할게','너의 꿈을 응원할게','늘 같은 마음으로','함께라서 행복해요','너의 내일을 믿어요'],
+m:['모두 함께 응원하자','응원의 마음을 모아','더 큰 목소리로 응원해','우리의 마음을 전하자','계속해서 함께할게','좋은 소식만 가득하길','너의 빛을 응원할게','늘 같은 편이 되어줄게','더 많은 사랑을 보내자','함께 힘을 보태자','응원은 계속될 거야','너의 편에 서 있을게','우리 함께 목소리 내자','따뜻한 마음을 전할게','더 멀리 빛날 수 있게'],
+a:['오늘도 빛나길 바라','끝까지 함께할게요','더 크게 빛나길 바라','늘 행복하기를 바라','너의 모든 날을 응원해','좋은 일만 가득하길','언제나 네 편일게','계속 응원하고 있을게','더 높이 날아오르길','너의 내일을 응원해','오래도록 함께할게','오늘도 사랑을 보낼게']
+},
+en:{
+b:['Always with {t}','We support {t}','Keep shining, {t}','Here for {t}','Cheering for {t}','We believe in {t}','Love you, {t}','Go higher, {t}','Stay strong, {t}','Proud of {t}','All for {t}','With you, {t}'],
+m:['Together we are stronger','Our support stays strong','We will stand by you','Let your light shine','Sending endless support','We are cheering for you','Your fans are with you','Keep reaching for more','Our voices are with you','You deserve the best'],
+a:['Keep shining every day','We are always with you','The best is yet to come','Wishing you brighter days','We will keep cheering','You are never alone','More love, more support','Forever on your side','Let your dreams come true','We believe in your future']
+}};
+function templatesFor(lang,section,t){let langs=lang==='mix'?['ko','en']:[lang];let out=[];for(const l of langs){for(let s of sectionTemplates[l][section])out.push(s.replaceAll('{t}',t|| (l==='ko'?'너':'you')))}return unique(out)}
+function makePool(section,target,lang,t){let pool=templatesFor(lang,section,t);if(target===0)return [''];return shuffle(unique(pool.filter(s=>chars(s)===target)))}
+function standardPool(lang,t){let langs=lang==='mix'?['ko','en']:[lang],out=[];for(const l of langs)for(const s of standard[l])out.push(s.replaceAll('{t}',t|| (l==='ko'?'너':'you')));return shuffle(unique(out))}
+function updateAvailability(){if(!$('strike').checked){$('availability').textContent='일반 모드에서는 문구 길이를 제한하지 않습니다.';return}let lang=$('language').value,t=topic();let parts=[['b','bc'],['m','mc'],['a','ac']];let info=parts.map(([p,c])=>{let n=Number($(c).value)||0;return `${n}자 ${makePool(p,n,lang,t).length}종`});$('availability').textContent='자동 생성 가능 문구: '+info.join(' · ')}
+function generate(){let n=Number($('count').value),lang=$('language').value,t1=tag('tag1'),t2=tag('tag2'),t=topic();if(!t1){alert('첫 번째 해시태그를 입력해주세요.');return}current=[];let used=new Set();
+if($('strike').checked){let b=makePool('b',Number($('bc').value),lang,t),m=t2?makePool('m',Number($('mc').value),lang,t):[''],a=makePool('a',Number($('ac').value),lang,t);if(!b.length||!m.length||!a.length){alert('설정한 글자 수에 맞는 자동 문구가 부족합니다. 글자 수를 조금 바꾸거나 키워드를 짧게 입력해 보세요.');return}let tries=0;while(current.length<n&&tries<n*300){tries++;let s=[pick(b),t1,t2?pick(m):null,t2,pick(a)].filter(x=>x!==null&&x!=='').join(' ');if(!used.has(s)){used.add(s);current.push(s)}}}
+else{let p=standardPool(lang,t);let tags=[t1,t2].filter(Boolean);let shuffled=shuffle(p);for(let i=0;i<n*20&&current.length<n;i++){let phrase=shuffled[i%shuffled.length];let s=[phrase,...tags].join(' ');if(!used.has(s)){used.add(s);current.push(s)}}}
+if(current.length<n)alert(`중복을 제외해 ${current.length}개 생성했어요. 다른 키워드나 문구 길이를 선택하면 더 다양한 조합을 만들 수 있어요.`);render()}
+function render(){$('total').textContent=`${current.length}개 생성됨`;$('results').innerHTML='';current.forEach((s,i)=>{let d=document.createElement('div');d.className='result';let top=document.createElement('div');top.className='resulttop';let num=document.createElement('span');num.textContent=`문구 ${i+1}`;let b=document.createElement('button');b.className='secondary';b.textContent='개별 복사';b.onclick=()=>copy(s);top.append(num,b);let body=document.createElement('div');body.textContent=s;d.append(top,body);$('results').append(d)})}
+async function copy(s){try{await navigator.clipboard.writeText(s);alert('복사했어요.')}catch(e){alert('복사 권한이 없어요. 문구를 길게 눌러 복사해주세요.')}}
+$('gen').onclick=generate;$('again').onclick=generate;$('copyall').onclick=()=>current.length?copy(current.map((s,i)=>`${i+1}. ${s}`).join('\n\n')):alert('먼저 생성해주세요.');$('share').onclick=()=>{if(!current.length){alert('먼저 생성해주세요.');return}window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(current.map((s,i)=>`${i+1}. ${s}`).join('\n\n')),'_blank','noopener,noreferrer')};
+['topic','language','bc','mc','ac','strike'].forEach(id=>$(id).addEventListener('input',updateAvailability));$('strike').addEventListener('change',updateAvailability);updateAvailability();
+</script></body></html>
